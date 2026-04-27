@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Barlow } from "next/font/google";
 import "./globals.css";
+import PrivyProviders from "@/app/providers/PrivyProvider";
 import QueryProvider from "@/components/providers/query-provider";
 
 const barlow = Barlow({
@@ -22,7 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${barlow.variable} antialiased`}>
-        <QueryProvider>{children}</QueryProvider>
+        <PrivyProviders>
+          <QueryProvider>{children}</QueryProvider>
+        </PrivyProviders>
       </body>
     </html>
   );

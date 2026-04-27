@@ -17,7 +17,8 @@ import {
   LogoutIcon,
 } from "@hugeicons/core-free-icons";
 import Image from "next/image";
-// Auth hooks — replace with real auth provider when wired up
+import { useLogout } from "@privy-io/react-auth";
+import { useAuthStore } from "@/lib/store/auth";
 
 const NAV = [
   { label: "Dashboard",   href: "/dashboard",    icon: Home01Icon         },
@@ -100,21 +101,19 @@ function UserCard() {
   const [copied, setCopied] = useState(false);
   const [showSignOut, setShowSignOut] = useState(false);
 
-  // TODO: replace with real auth session values
-  const email: string | null       = null;
-  const address: string | null     = null;
-  const displayAddress             = address ? truncate(address) : null;
-  const avatarChar                 = email ? (email as string)[0].toUpperCase() : "U";
+  const { logout } = useLogout({ onSuccess: () => router.replace("/") });
+  const { email, walletAddress, displayName, avatarChar } = useAuthStore();
+
+  const displayAddress = walletAddress ? truncate(walletAddress) : null;
 
   async function handleSignOut() {
     setShowSignOut(false);
-    // TODO: call auth provider logout
-    router.push("/");
+    await logout();
   }
 
   function copy() {
-    if (!address) return;
-    navigator.clipboard.writeText(address);
+    if (!walletAddress) return;
+    navigator.clipboard.writeText(walletAddress);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -153,7 +152,7 @@ function UserCard() {
             </div>
             <div className="flex flex-col gap-0.5 flex-1 min-w-0">
               <span className="text-[11px] font-semibold text-white leading-none truncate">
-                {email ?? (displayAddress ?? "Connected")}
+                {displayName ?? "Connected"}
               </span>
             </div>
           </div>
