@@ -11,11 +11,15 @@ import {
   Notification01Icon,
   ArrowRight01Icon,
   Search01Icon,
+  RefreshIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import TrendingMarkets from "../_components/markets";
 import LimitOrdersPanel from "../_components/limit-orders-panel";
 import VenueStatus from "../_components/venue-status";
+import FundModal from "../_components/fund-modal";
+import { useAuthStore } from "@/lib/store/auth";
+import { useSolBalance } from "@/lib/hooks/use-sol-balance";
 
 const STATS = [
   { label: "Available",    raw: 8200,  format: (n: number) => `$${n.toLocaleString()}.00`, trend: "+1.92%", up: true,  points: [40,38,42,39,44,41,45,43,47,46,50,52] },
@@ -115,20 +119,26 @@ function Sparkline({ points, up, w = 120, h = 36 }: { points: number[]; up: bool
   );
 }
 
-function AnimatedBalance({ visible }: { visible: boolean }) {
-  const dollars = useCountUp(12450, 700, 0);
-  return (
-    <span className="text-[32px] font-semibold leading-none tracking-tight text-white tabular-nums">
-      {visible ? `$${dollars.toLocaleString()}.00` : "••••••••"}
-    </span>
-  );
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
 }
 
 export default function DashboardPage() {
   const [balanceVisible, setBalanceVisible] = useState(true);
+  const [showFund,       setShowFund]       = useState(false);
+
+  const { displayName, walletAddress } = useAuthStore();
+  const { sol, loading: balLoading, refresh } = useSolBalance(walletAddress);
 
   return (
     <div className="flex flex-col min-h-screen">
+      {showFund && walletAddress && (
+        <FundModal address={walletAddress} onClose={() => setShowFund(false)} />
+      )}
+
       {/* Top bar */}
       <div
         className="flex items-center justify-between px-8 pt-6 "
@@ -136,7 +146,9 @@ export default function DashboardPage() {
       >
         {/* Greeting */}
         <div className="flex flex-col gap-0.5">
-          <span className="text-lg font-semibold text-white">Good morning, username.</span>
+          <span className="text-lg font-semibold text-white">
+            {greeting()}{displayName ? `, ${displayName.split("@")[0]}` : ""}.
+          </span>
           <span className="text-[14px]" style={{ color: "rgba(255,255,255,0.3)" }}>
             Markets are open — 14 active positions running.
           </span>
@@ -198,12 +210,28 @@ export default function DashboardPage() {
         >
           {/* Left: balance */}
           <div className="flex flex-col gap-4">
-            <span className="text-[11px] uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>
-              Total Balance
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>
+                SOL Balance
+              </span>
+              <button onClick={refresh} className="transition-opacity hover:opacity-60">
+                <HugeiconsIcon icon={RefreshIcon} size={11} color="rgba(255,255,255,0.2)" strokeWidth={1.5} />
+              </button>
+            </div>
 
             <div className="flex items-center gap-3">
-              <AnimatedBalance visible={balanceVisible} />
+              {balanceVisible ? (
+                <span className="text-[32px] font-semibold leading-none tracking-tight text-white tabular-nums">
+                  {balLoading
+                    ? <span className="text-[20px]" style={{ color: "rgba(255,255,255,0.2)" }}>fetching…</span>
+                    : sol !== null
+                      ? `${sol.toFixed(4)} SOL`
+                      : "—"
+                  }
+                </span>
+              ) : (
+                <span className="text-[32px] font-semibold leading-none tracking-tight text-white">••••••</span>
+              )}
               <button
                 onClick={() => setBalanceVisible((v) => !v)}
                 className="transition-opacity hover:opacity-70"
@@ -217,27 +245,14 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            {/* P&L badge */}
-            <div className="flex items-center gap-1.5">
-              <div
-                className="flex items-center gap-1 px-2 py-0.5"
-                style={{
-                  background: "rgba(52,211,153,0.1)",
-                  border: "1px solid rgba(52,211,153,0.15)",
-                }}
-              >
-                <HugeiconsIcon icon={ArrowUpRight01Icon} size={11} color="#34d399" strokeWidth={2} />
-                <span className="text-[11px] font-medium" style={{ color: "#34d399" }}>
-                  +$234.50 today
-                </span>
-              </div>
-              <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.2)" }}>+1.92%</span>
-            </div>
+            <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.2)" }}>
+              Solana Mainnet · embedded wallet
+            </span>
           </div>
 
           {/* Right: actions */}
           <div className="flex items-center gap-2 mt-1">
-            <Button variant="primary" size="md" shape="slant">
+            <Button variant="primary" size="md" shape="slant" onClick={() => setShowFund(true)}>
               <HugeiconsIcon icon={Add01Icon} size={12} color="white" strokeWidth={2} />
               Add Funds
             </Button>

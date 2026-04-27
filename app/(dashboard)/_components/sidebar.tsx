@@ -143,7 +143,7 @@ function UserCard() {
           style={{ background: "#1a1a1a" }}
         >
           {/* Top row: avatar + identity */}
-          <div className="flex items-center gap-2.5">
+          <Link href="/profile" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-[12px] font-bold"
               style={{ background: `linear-gradient(135deg, ${ACCENT}, #a78bfa)`, color: "white" }}
@@ -154,8 +154,9 @@ function UserCard() {
               <span className="text-[11px] font-semibold text-white leading-none truncate">
                 {displayName ?? "Connected"}
               </span>
+              <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.25)" }}>View profile</span>
             </div>
-          </div>
+          </Link>
 
           {/* Wallet address row */}
           {displayAddress && (
