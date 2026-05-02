@@ -4,7 +4,7 @@ import axios from "axios";
 const appBase =
   typeof window !== "undefined"
     ? ""
-    : process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    : process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:8000";
 
 export const polymarketProxyClient = axios.create({
   baseURL: `${appBase}/api/polymarket`,

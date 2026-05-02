@@ -17,18 +17,45 @@ import {
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 
-const PLATFORMS = [
-  { id: "polymarket", label: "Polymarket", yes: 67, no: 33, logo: "poly"   as const, live: true  },
-  { id: "kalshi",     label: "Kalshi",     yes: 64, no: 36, logo: "kalshi" as const, live: true  },
-  { id: "bayse",      label: "Bayse",      yes: 62, no: 38, logo: "bayse"  as const, live: false }, // connecting
-];
+import type { VenueMarketRow } from "@/lib/api/types";
 
-const LIVE_PLATFORMS = PLATFORMS.filter((p) => p.live);
+type Platform = {
+  id:    string;
+  label: string;
+  yes:   number;
+  no:    number;
+  logo:  "poly" | "kalshi" | "bayse";
+  live:  boolean;
+};
 
-function bestIndexForSide(side: "yes" | "no", liveOnly = true) {
-  const pool = liveOnly ? LIVE_PLATFORMS : PLATFORMS;
-  const best = pool.reduce((b, p) => (p[side] < b[side] ? p : b));
-  return PLATFORMS.findIndex((p) => p.id === best.id);
+function venueToLogo(venueId: string): "poly" | "kalshi" | "bayse" {
+  if (venueId === "polymarket") return "poly";
+  if (venueId === "bayse")      return "bayse";
+  return "kalshi";
+}
+
+function venueToLabel(venueId: string): string {
+  if (venueId === "polymarket") return "Polymarket";
+  if (venueId === "bayse")      return "Bayes Market";
+  return venueId.charAt(0).toUpperCase() + venueId.slice(1);
+}
+
+function buildPlatforms(venues: VenueMarketRow[]): Platform[] {
+  if (venues.length === 0) return [];
+  return venues.map((v) => ({
+    id:    v.venueId,
+    label: venueToLabel(v.venueId),
+    yes:   Math.round(v.yesPrice),
+    no:    Math.round(v.noPrice),
+    logo:  venueToLogo(v.venueId),
+    live:  true,
+  }));
+}
+
+function bestIndexForSide(platforms: Platform[], side: "yes" | "no") {
+  if (platforms.length === 0) return 0;
+  const best = platforms.reduce((b, p) => (p[side] < b[side] ? p : b));
+  return platforms.findIndex((p) => p.id === best.id);
 }
 
 function PlatformIcon({ logo, size = 14 }: { logo: "poly" | "kalshi" | "bayse"; size?: number }) {
@@ -63,7 +90,13 @@ function PlatformIcon({ logo, size = 14 }: { logo: "poly" | "kalshi" | "bayse"; 
 
 const SLIPPAGE_PRESETS = ["0.5", "1", "2"];
 
-export default function TradePanel() {
+interface TradePanelProps {
+  venues: import("@/lib/api/types").VenueMarketRow[];
+}
+
+export default function TradePanel({ venues }: TradePanelProps) {
+  const PLATFORMS = buildPlatforms(venues);
+
   const [side, setSide]               = useState<"yes" | "no">("yes");
   const [orderType, setOrderType]     = useState<"market" | "limit">("market");
   const [amount, setAmount]           = useState("");
@@ -75,20 +108,16 @@ export default function TradePanel() {
   const [customSlippage, setCustomSlippage] = useState("");
   const dropRef                       = useRef<HTMLDivElement>(null);
 
-  const bestIdx     = bestIndexForSide(side);
+  const bestIdx     = bestIndexForSide(PLATFORMS, side);
   const platformIdx = manualIdx ?? bestIdx;
   const platform    = PLATFORMS[platformIdx];
-  const marketPrice = platform[side];
   const isAutoBest  = manualIdx === null;
 
-  // Best price considering only live venues
-  const bestLivePrice  = PLATFORMS[bestIdx][side];
-  // Best price across all venues (incl. offline) — to detect if offline venue would win
-  const bestAllIdx     = bestIndexForSide(side, false);
-  const bestAllVenue   = PLATFORMS[bestAllIdx];
-  const offlineWouldWin = !bestAllVenue.live && bestAllVenue[side] < bestLivePrice;
+  const marketPrice    = platform?.[side] ?? 50;
+  const bestLivePrice  = PLATFORMS[bestIdx]?.[side] ?? 50;
+  const offlineWouldWin = false;
 
-  const worstPrice = Math.max(...LIVE_PLATFORMS.map((p) => p[side]));
+  const worstPrice = PLATFORMS.length > 0 ? Math.max(...PLATFORMS.map((p) => p[side])) : bestLivePrice;
   const savings    = worstPrice - bestLivePrice;
 
   const execPrice = orderType === "limit"
@@ -132,6 +161,22 @@ export default function TradePanel() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  if (PLATFORMS.length === 0) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center gap-2 py-12 text-center"
+        style={{ border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.01)" }}
+      >
+        <span className="text-[13px] font-medium" style={{ color: "rgba(255,255,255,0.3)" }}>
+          No venues available
+        </span>
+        <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.15)" }}>
+          Pricing data not yet synced for this market
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-0">
@@ -241,18 +286,6 @@ export default function TradePanel() {
           )}
         </div>
 
-        {/* Offline venue would have been better */}
-        {offlineWouldWin && (
-          <div
-            className="flex items-center gap-1.5 px-2.5 py-1.5 mt-1"
-            style={{ background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.15)" }}
-          >
-            <HugeiconsIcon icon={Alert02Icon} size={11} color="#f59e0b" strokeWidth={1.5} />
-            <span className="text-[13px]" style={{ color: "rgba(245,158,11,0.8)" }}>
-              {bestAllVenue.label} has better price ({bestAllVenue[side]}¢) but is currently offline
-            </span>
-          </div>
-        )}
       </div>
 
       {/* YES / NO */}

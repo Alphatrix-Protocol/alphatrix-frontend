@@ -3,236 +3,242 @@
 import Link from "next/link";
 import Image from "next/image";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  News01Icon,
-  Tick01Icon,
-  ArrowUpRight01Icon,
-  ArrowRight01Icon,
-} from "@hugeicons/core-free-icons";
-
-const FEATURES = [
-  {
-    icon:  News01Icon,
-    title: "Unified markets",
-    body:  "Polymarket and Bayes Market aggregated into one normalised feed. No platform switching, no fragmented liquidity.",
-  },
-  {
-    icon:  Tick01Icon,
-    title: "Limit orders",
-    body:  "Set a target price on any market. Orders execute automatically when conditions are met — stored on-chain via Solana.",
-  },
-  {
-    icon:  ArrowUpRight01Icon,
-    title: "Best-price execution",
-    body:  "The aggregation layer evaluates depth across venues and splits orders to minimise slippage on every fill.",
-  },
-];
+import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#111111", color: "#fff" }}>
+    <div
+      className="min-h-screen flex flex-col"
+      style={{
+        background: "#0d0d0d",
+        color: "#fff",
+        backgroundImage: `
+          linear-gradient(rgba(255,255,255,0.032) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.032) 1px, transparent 1px)
+        `,
+        backgroundSize: "44px 44px",
+      }}
+    >
+      {/* Radial fade at center — softens the grid */}
+      <div
+        className="pointer-events-none fixed inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 70% 55% at 50% 42%, rgba(13,13,13,0) 0%, rgba(13,13,13,0.72) 100%)",
+          zIndex: 0,
+        }}
+      />
+      {/* Top fade */}
+      <div
+        className="pointer-events-none fixed inset-x-0 top-0 h-40"
+        style={{
+          background: "linear-gradient(to bottom, #0d0d0d 0%, transparent 100%)",
+          zIndex: 0,
+        }}
+      />
+      {/* Bottom fade */}
+      <div
+        className="pointer-events-none fixed inset-x-0 bottom-0 h-40"
+        style={{
+          background: "linear-gradient(to top, #0d0d0d 0%, transparent 100%)",
+          zIndex: 0,
+        }}
+      />
 
       {/* Nav */}
-      <nav className="flex items-center justify-between px-8 py-5 max-w-5xl mx-auto w-full">
+      <nav
+        className="relative flex items-center justify-between px-8 py-5 max-w-5xl mx-auto w-full"
+        style={{ zIndex: 10 }}
+      >
         <div className="flex items-center gap-2.5">
           <div className="size-7 bg-white rounded-md overflow-hidden">
-            <Image src="/applogo.png" alt="Alpatrix" width={28} height={28} className="object-cover" />
+            <Image
+              src="/applogo.png"
+              alt="Alpatrix"
+              width={28}
+              height={28}
+              className="object-cover"
+            />
           </div>
           <span className="text-[17px] font-semibold tracking-tight">Alpatrix</span>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-[13px]" style={{ color: "rgba(255,255,255,0.3)" }}>Built on Solana</span>
+
+        <div className="flex items-center gap-5">
+          <span
+            className="text-[13px] hidden sm:block"
+            style={{ color: "rgba(255,255,255,0.25)" }}
+          >
+            Built on Solana
+          </span>
           <Link
             href="/auth"
-            className="flex items-center gap-1.5 px-4 py-2 text-[14px] font-medium transition-all"
-            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.8)" }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.11)")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.07)")}
+            className="flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-sm transition-all"
+            style={{
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.09)",
+              color: "rgba(255,255,255,0.7)",
+            }}
+            onMouseEnter={(e) =>
+              ((e.currentTarget as HTMLElement).style.background =
+                "rgba(255,255,255,0.1)")
+            }
+            onMouseLeave={(e) =>
+              ((e.currentTarget as HTMLElement).style.background =
+                "rgba(255,255,255,0.06)")
+            }
           >
             Sign in
           </Link>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="flex flex-col items-center text-center gap-7 px-6 pt-20 pb-24 max-w-3xl mx-auto w-full">
-
+      {/* Hero — full height centre */}
+      <section
+        className="relative flex flex-col items-center justify-center text-center gap-7 flex-1 px-6"
+        style={{ zIndex: 10, minHeight: "calc(100vh - 72px)" }}
+      >
+        {/* Purple glow blob behind headline */}
         <div
-          className="flex items-center gap-2 px-3.5 py-1.5"
-          style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}
+          className="pointer-events-none absolute"
+          style={{
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -54%)",
+            width: 520,
+            height: 320,
+            background:
+              "radial-gradient(ellipse at center, rgba(123,110,244,0.13) 0%, transparent 70%)",
+            filter: "blur(0px)",
+          }}
+        />
+
+        {/* Live pill */}
+        <div
+          className="flex items-center gap-2 px-3.5 py-1.5 rounded-full"
+          style={{
+            border: "1px solid rgba(255,255,255,0.07)",
+            background: "rgba(255,255,255,0.03)",
+          }}
         >
           <span
-            className="w-1.5 h-1.5 rounded-full shrink-0"
-            style={{ background: "#34d399", boxShadow: "0 0 5px rgba(52,211,153,0.5)" }}
+            className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse"
+            style={{
+              background: "#34d399",
+              boxShadow: "0 0 6px rgba(52,211,153,0.6)",
+            }}
           />
-          <span className="text-[13px]" style={{ color: "rgba(255,255,255,0.35)" }}>
-            Live on Polymarket · Bayes Market coming soon
+          <span
+            className="text-[12px] tracking-wide"
+            style={{ color: "rgba(255,255,255,0.3)" }}
+          >
+            Live on Polymarket · Bayes Market
           </span>
         </div>
 
-        <h1 className="text-[56px] font-bold leading-[1.06] tracking-tight">
-          The execution layer for<br />
-          <span style={{
-            background: "linear-gradient(135deg, #a78bfa 0%, #7B6EF4 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-          }}>
+        {/* Headline */}
+        <h1
+          className="text-[58px] sm:text-[72px] font-bold leading-[1.04] tracking-tight"
+          style={{ letterSpacing: "-0.03em" }}
+        >
+          The execution layer
+          <br />
+          for{" "}
+          <span
+            style={{
+              background: "linear-gradient(135deg, #a78bfa 0%, #7B6EF4 50%, #6366f1 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
             prediction markets.
           </span>
         </h1>
 
-        <p className="text-[17px] leading-relaxed max-w-md" style={{ color: "rgba(255,255,255,0.38)" }}>
-          Aggregate liquidity across venues. Execute with limit orders, smart routing,
-          and best-price fills — from a single non-custodial interface.
+        {/* Subtext */}
+        <p
+          className="text-[16px] sm:text-[17px] leading-relaxed max-w-sm"
+          style={{ color: "rgba(255,255,255,0.32)" }}
+        >
+          Aggregate, compare, and execute across every venue — with limit orders and
+          best-price routing, all non-custodial.
         </p>
 
-        <div className="flex items-center gap-3 pt-2">
+        {/* CTA row */}
+        <div className="flex items-center gap-3 pt-1">
           <Link
             href="/auth"
-            className="flex items-center gap-2 px-6 py-3 text-[15px] font-semibold transition-all"
+            className="flex items-center gap-2 px-6 py-3 text-[14px] font-semibold rounded-sm transition-all"
             style={{ background: "#7B6EF4", color: "#fff" }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#6d62e0")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "#7B6EF4")}
+            onMouseEnter={(e) =>
+              ((e.currentTarget as HTMLElement).style.background = "#6d62e0")
+            }
+            onMouseLeave={(e) =>
+              ((e.currentTarget as HTMLElement).style.background = "#7B6EF4")
+            }
           >
             Get started
-            <HugeiconsIcon icon={ArrowRight01Icon} size={15} color="#fff" strokeWidth={2} />
+            <HugeiconsIcon icon={ArrowRight01Icon} size={14} color="#fff" strokeWidth={2} />
           </Link>
           <a
-            href="https://docs.alpatrix.xyz"
-            className="px-6 py-3 text-[15px] font-medium transition-all"
-            style={{ color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)" }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.7)")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.4)")}
+            href="#"
+            className="px-6 py-3 text-[14px] font-medium rounded-sm transition-all"
+            style={{
+              color: "rgba(255,255,255,0.35)",
+              border: "1px solid rgba(255,255,255,0.07)",
+            }}
+            onMouseEnter={(e) =>
+              ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)")
+            }
+            onMouseLeave={(e) =>
+              ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.35)")
+            }
           >
             Read docs
           </a>
         </div>
-      </section>
 
-      {/* Stats row */}
-      <section
-        className="py-10"
-        style={{ borderTop: "1px solid rgba(255,255,255,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
-      >
-        <div className="flex items-center justify-center gap-20 max-w-5xl mx-auto w-full px-8">
-          {[
-            { value: "2,400+", label: "Markets aggregated" },
-            { value: "2",      label: "Venues integrated"  },
-            { value: "~3.2%",  label: "Avg fill improvement" },
-          ].map(({ value, label }) => (
-            <div key={label} className="flex flex-col items-center gap-1.5">
-              <span className="text-[32px] font-bold tracking-tight">{value}</span>
-              <span className="text-[13px] uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.2)" }}>
-                {label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="py-20 px-8 max-w-5xl mx-auto w-full">
-        <div className="flex flex-col gap-12">
-          <div className="flex flex-col items-center gap-3 text-center">
-            <span className="text-[12px] uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.2)" }}>
-              What Alpatrix does
-            </span>
-            <h2 className="text-[30px] font-bold tracking-tight">
-              One interface. Every market.
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-3 gap-5">
-            {FEATURES.map((f) => (
-              <div
-                key={f.title}
-                className="flex flex-col gap-4 p-6"
-                style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}
-              >
-                <div
-                  className="flex items-center justify-center w-9 h-9"
-                  style={{ background: "rgba(123,110,244,0.1)", border: "1px solid rgba(123,110,244,0.18)" }}
-                >
-                  <HugeiconsIcon icon={f.icon} size={16} color="#7B6EF4" strokeWidth={1.5} />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <span className="text-[16px] font-semibold">{f.title}</span>
-                  <span className="text-[14px] leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>
-                    {f.body}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Venues */}
-      <section
-        className="py-14 px-8"
-        style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
-      >
-        <div className="flex flex-col items-center gap-6 max-w-5xl mx-auto w-full">
-          <span className="text-[12px] uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.2)" }}>
-            Integrated venues
-          </span>
-          <div className="flex items-center gap-8">
-            <VenuePill name="Polymarket"   state="live" />
-            <div className="w-px h-5" style={{ background: "rgba(255,255,255,0.07)" }} />
-            <VenuePill name="Bayes Market" state="soon" />
-          </div>
-          <span className="text-[13px]" style={{ color: "rgba(255,255,255,0.15)" }}>
-            More venues extensible by design
-          </span>
-        </div>
-      </section>
-
-      {/* CTA banner */}
-      <section className="py-20 px-8">
+        {/* Venue row */}
         <div
-          className="flex flex-col items-center gap-6 max-w-xl mx-auto text-center py-14 px-8"
-          style={{ background: "rgba(123,110,244,0.06)", border: "1px solid rgba(123,110,244,0.15)" }}
+          className="flex items-center gap-6 mt-4"
+          style={{ color: "rgba(255,255,255,0.18)", fontSize: 12 }}
         >
-          <h2 className="text-[28px] font-bold tracking-tight">Ready to trade smarter?</h2>
-          <p className="text-[15px]" style={{ color: "rgba(255,255,255,0.35)" }}>
-            Non-custodial. No sign-up required. Start in seconds.
-          </p>
-          <Link
-            href="/auth"
-            className="flex items-center gap-2 px-6 py-3 text-[15px] font-semibold transition-all"
-            style={{ background: "#7B6EF4", color: "#fff" }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "#6d62e0")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "#7B6EF4")}
-          >
-            Launch app
-            <HugeiconsIcon icon={ArrowRight01Icon} size={15} color="#fff" strokeWidth={2} />
-          </Link>
+          <VenuePill name="Polymarket" state="live" />
+          <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.07)", display: "block" }} />
+          <VenuePill name="Bayes Market" state="live" />
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Footer — anchored at bottom */}
       <footer
-        className="flex items-center justify-between px-8 py-5 mt-auto max-w-5xl mx-auto w-full"
-        style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
+        className="relative flex items-center justify-between px-8 py-5 max-w-5xl mx-auto w-full"
+        style={{
+          zIndex: 10,
+          borderTop: "1px solid rgba(255,255,255,0.04)",
+        }}
       >
-        <span className="text-[13px]" style={{ color: "rgba(255,255,255,0.18)" }}>© 2025 Alpatrix</span>
+        <span className="text-[12px]" style={{ color: "rgba(255,255,255,0.14)" }}>
+          © 2025 Alpatrix
+        </span>
         <div className="flex items-center gap-5">
           {[
-            { label: "X",        href: "https://x.com/alpatrix"      },
-            { label: "Discord",  href: "https://discord.gg/alpatrix" },
-            { label: "Telegram", href: "https://t.me/alpatrix"       },
-            { label: "GitHub",   href: "https://github.com/alpatrix" },
+            { label: "X",        href: "#" },
+            { label: "Discord",  href: "#" },
+            { label: "Telegram", href: "#" },
           ].map(({ label, href }) => (
             <a
               key={label}
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[13px] transition-colors"
-              style={{ color: "rgba(255,255,255,0.22)" }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.22)")}
+              className="text-[12px] transition-colors"
+              style={{ color: "rgba(255,255,255,0.18)" }}
+              onMouseEnter={(e) =>
+                ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.5)")
+              }
+              onMouseLeave={(e) =>
+                ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.18)")
+              }
             >
               {label}
             </a>
@@ -245,27 +251,33 @@ export default function LandingPage() {
 
 function VenuePill({ name, state }: { name: string; state: "live" | "soon" }) {
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex items-center gap-2">
       <span
         style={{
-          display:      "inline-block",
-          width:        7,
-          height:       7,
+          display: "inline-block",
+          width: 6,
+          height: 6,
           borderRadius: "50%",
-          background:   state === "live" ? "#34d399" : "rgba(255,255,255,0.18)",
-          boxShadow:    state === "live" ? "0 0 6px rgba(52,211,153,0.45)" : "none",
+          background: state === "live" ? "#34d399" : "rgba(255,255,255,0.15)",
+          boxShadow: state === "live" ? "0 0 5px rgba(52,211,153,0.5)" : "none",
         }}
       />
       <span
-        className="text-[15px] font-medium"
-        style={{ color: state === "live" ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.25)" }}
+        className="text-[12px] font-medium"
+        style={{
+          color: state === "live" ? "rgba(255,255,255,0.45)" : "rgba(255,255,255,0.2)",
+        }}
       >
         {name}
       </span>
       {state === "soon" && (
         <span
-          className="text-[11px] font-medium px-1.5 py-0.5"
-          style={{ color: "rgba(255,255,255,0.28)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
+          className="text-[10px] px-1.5 py-0.5 rounded-sm"
+          style={{
+            color: "rgba(255,255,255,0.22)",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.06)",
+          }}
         >
           soon
         </span>

@@ -71,7 +71,7 @@ function Section({ title, icon, children }: { title: string; icon: typeof Mail01
 
 export default function ProfilePage() {
   const { user } = usePrivy();
-  const { email, walletAddress, avatarChar, userId } = useAuthStore();
+  const { email, walletAddress, avatarChar, privyUserId } = useAuthStore();
 
   const createdAt = user?.createdAt
     ? new Date(user.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
@@ -142,9 +142,9 @@ export default function ProfilePage() {
             })()}
             <InfoRow
               label="User ID"
-              value={userId ?? "—"}
+              value={privyUserId ?? "—"}
               mono
-              action={userId ? <CopyButton value={userId} /> : undefined}
+              action={privyUserId ? <CopyButton value={privyUserId} /> : undefined}
             />
             <InfoRow label="Member since" value={createdAt} />
           </Section>

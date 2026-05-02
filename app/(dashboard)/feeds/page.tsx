@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
@@ -15,32 +15,27 @@ import {
   Cancel01Icon,
   SparklesIcon,
   FireIcon,
-  ChartIcon,
   ExternalLink,
   GridViewIcon,
   LayoutList,
 } from "@hugeicons/core-free-icons";
-import { FILTERS, PLATFORM_META, type Market } from "../_components/markets/data";
+import { FILTERS } from "../_components/markets/data";
 import PlatformLogo from "../_components/markets/platform-logo";
 import MarketCard from "../_components/markets/market-card";
 import { MarketCardSkeleton } from "../_components/market-skeleton";
-import { useCombinedMarkets } from "@/lib/hooks/use-combined-markets";
-import type { OpportunityBrief } from "@/services/polymarket.service";
+import { useInfiniteMarkets } from "@/lib/api/hooks/use-backend-markets";
+import type { MarketListItem } from "@/lib/api/types";
 
-function briefToMarket(b: OpportunityBrief): Market {
-  return {
-    id: b.eventSlug,
-    title: b.eventTitle,
-    image: b.image ?? `https://picsum.photos/seed/${b.eventSlug}/120/120`,
-    category: b.category,
-    price: b.marketProbability,
-    change: b.edgePercent,
-    volume: b.volume >= 1_000_000
-      ? `$${(b.volume / 1_000_000).toFixed(1)}M`
-      : `$${(b.volume / 1_000).toFixed(0)}K`,
-    closeDate: new Date(b.closesAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-    platform: b.platform ?? "polymarket",
-  };
+function fmtVolume(n: number): string {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000)     return `$${(n / 1_000).toFixed(0)}K`;
+  return `$${n}`;
+}
+
+function venueLabel(venueId: string): string {
+  if (venueId === "polymarket") return "Polymarket";
+  if (venueId === "bayse")      return "Bayes Market";
+  return venueId;
 }
 
 const QUICK_OPTIONS = [
@@ -123,11 +118,38 @@ export default function FeedsPage() {
   const [findingFor, setFindingFor] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { data: briefs, isLoading, isError } = useCombinedMarkets(20);
-  const markets: Market[] = briefs?.map(briefToMarket) ?? [];
-  const filteredMarkets = markets
-    .filter((m) => platform === "all" || m.platform === platform)
-    .filter((m) => filter === "All" || m.category === filter);
+  const {
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteMarkets({
+    venueId: platform === "all" ? undefined : platform,
+    category: filter === "All" ? undefined : filter,
+  });
+
+  const markets: MarketListItem[] = data?.pages.flatMap((p) => p.data) ?? [];
+  const total = data?.pages[0]?.total ?? 0;
+
+  // Sentinel ref for infinite scroll
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const onIntersect = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage],
+  );
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(onIntersect, { rootMargin: "200px" });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [onIntersect]);
 
   function openPanel(id: string) {
     setActiveOption(id);
@@ -259,7 +281,7 @@ export default function FeedsPage() {
                 className="text-[10px] px-1.5 py-0.5"
                 style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.07)" }}
               >
-                {isLoading ? "…" : filteredMarkets.length}
+                {isLoading ? "…" : `${markets.length} / ${total}`}
               </span>
             </div>
             <div
@@ -340,7 +362,7 @@ export default function FeedsPage() {
             <div className="grid grid-cols-3 gap-4">
               {isLoading
                 ? Array.from({ length: 9 }).map((_, i) => <MarketCardSkeleton key={i} />)
-                : filteredMarkets.map((market) => <MarketCard key={market.id} market={market} />)
+                : markets.map((market) => <MarketCard key={market.id} market={market} />)
               }
             </div>
           )}
@@ -363,32 +385,44 @@ export default function FeedsPage() {
                       <div style={{ width: 120, height: 10, background: "rgba(255,255,255,0.06)", borderRadius: 2 }} />
                     </div>
                   ))
-                : filteredMarkets.map((market, i) => {
-                const isUp = market.change > 0;
+                : markets.map((market, i) => {
+                const change = market.change24h;
+                const isUp   = change !== null && change >= 0;
                 const changeColor = isUp ? "#34d399" : "#f87171";
+                const navId  = market.matchGroupId ?? market.id;
+                const imgSrc = market.image ?? market.icon ?? null;
                 return (
                   <div
                     key={market.id}
                     className="flex items-center gap-4 px-4 py-3.5 transition-colors"
                     style={{
-                      borderBottom: i < filteredMarkets.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                      borderBottom: i < markets.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
                       background: "transparent",
                     }}
                     onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)")}
                     onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
                   >
+                    {/* Thumbnail */}
                     <div
-                      className="relative shrink-0 rounded overflow-hidden"
-                      style={{ width: 36, height: 36, border: "1px solid rgba(255,255,255,0.07)" }}
+                      className="relative shrink-0 overflow-hidden rounded"
+                      style={{ width: 36, height: 36, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)" }}
                     >
-                      <Image src={market.image} alt={market.title} fill className="object-cover" sizes="36px" />
+                      {imgSrc ? (
+                        <Image src={imgSrc} alt={market.title} fill className="object-cover" sizes="36px" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-[13px] font-bold" style={{ color: "rgba(255,255,255,0.2)" }}>
+                            {market.category.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex flex-col gap-0.5 flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <PlatformLogo platform={market.platform} size={13} />
+                        <PlatformLogo platform={market.venueId} size={13} />
                         <span className="text-[9px] font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>
-                          {PLATFORM_META[market.platform].label}
+                          {venueLabel(market.venueId)}
                         </span>
                         <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.15)" }}>·</span>
                         <span className="text-[9px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.25)" }}>
@@ -396,7 +430,7 @@ export default function FeedsPage() {
                         </span>
                       </div>
                       <Link
-                        href={`/markets/${market.id}`}
+                        href={`/markets/${navId}`}
                         className="text-[13px] font-medium text-white truncate hover:text-white/80 transition-colors"
                       >
                         {market.title}
@@ -406,28 +440,32 @@ export default function FeedsPage() {
                     <div className="flex items-center gap-6 shrink-0">
                       <div className="flex flex-col items-end gap-0.5">
                         <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>Vol</span>
-                        <span className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.5)" }}>{market.volume}</span>
+                        <span className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.5)" }}>
+                          {fmtVolume(market.volume24h)}
+                        </span>
                       </div>
                       <div className="flex flex-col items-end gap-0.5">
-                        <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>Closes</span>
-                        <span className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.4)" }}>{market.closeDate}</span>
-                      </div>
-                      <div className="flex flex-col items-end gap-0.5">
-                        <span className="text-[19px] font-bold text-white leading-none">{market.price}¢</span>
-                        <div className="flex items-center gap-0.5">
-                          <HugeiconsIcon
-                            icon={isUp ? ArrowUpRight01Icon : ArrowDownRight01Icon}
-                            size={9}
-                            color={changeColor}
-                            strokeWidth={2}
-                          />
-                          <span className="text-[10px] font-semibold" style={{ color: changeColor }}>
-                            {isUp ? "+" : ""}{market.change}%
-                          </span>
-                        </div>
+                        <span className="text-[19px] font-bold text-white leading-none">
+                          {market.yesPrice !== null ? `${market.yesPrice}¢` : "—"}
+                        </span>
+                        {change !== null ? (
+                          <div className="flex items-center gap-0.5">
+                            <HugeiconsIcon
+                              icon={isUp ? ArrowUpRight01Icon : ArrowDownRight01Icon}
+                              size={9}
+                              color={changeColor}
+                              strokeWidth={2}
+                            />
+                            <span className="text-[10px] font-semibold" style={{ color: changeColor }}>
+                              {isUp ? "+" : ""}{change}%
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>—</span>
+                        )}
                       </div>
                       <Link
-                        href={`/markets/${market.id}`}
+                        href={`/markets/${navId}`}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold transition-all"
                         style={{
                           border: "1px solid rgba(255,255,255,0.1)",
@@ -452,6 +490,24 @@ export default function FeedsPage() {
               })}
             </div>
           )}
+
+          {/* Sentinel + load-more indicator */}
+          <div ref={sentinelRef} className="flex items-center justify-center py-6">
+            {isFetchingNextPage && (
+              <div className="flex items-center gap-2" style={{ color: "rgba(255,255,255,0.2)" }}>
+                <svg className="animate-spin" width={14} height={14} viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="32" strokeDashoffset="12" strokeLinecap="round" />
+                </svg>
+                <span className="text-[11px]">Loading more…</span>
+              </div>
+            )}
+            {!hasNextPage && !isLoading && markets.length > 0 && (
+              <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.12)" }}>
+                All {total.toLocaleString()} markets loaded
+              </span>
+            )}
+          </div>
+
         </div>
       </div>
 

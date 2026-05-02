@@ -1,7 +1,11 @@
 'use client';
 
 import { PrivyProvider } from '@privy-io/react-auth';
-import AuthSync from './AuthSync';
+import { toSolanaWalletConnectors } from '@privy-io/react-auth/solana';
+import { createSolanaRpc, createSolanaRpcSubscriptions } from '@solana/kit';
+
+const RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL ?? 'https://api.mainnet-beta.solana.com';
+const WSS_URL = RPC_URL.replace(/^https/, 'wss');
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -25,9 +29,22 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             createOnLogin: 'users-without-wallets',
           },
         },
+        // Required in v3 for Solana embedded wallets to initialise correctly
+        solana: {
+          rpcs: {
+            'solana:mainnet': {
+              rpc:              createSolanaRpc(RPC_URL),
+              rpcSubscriptions: createSolanaRpcSubscriptions(WSS_URL),
+            },
+          },
+        },
+        externalWallets: {
+          solana: {
+            connectors: toSolanaWalletConnectors(),
+          },
+        },
       }}
     >
-      <AuthSync />
       {children}
     </PrivyProvider>
   );

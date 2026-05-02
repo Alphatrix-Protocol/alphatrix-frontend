@@ -1,14 +1,21 @@
-import Image from "next/image";
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowUpRight01Icon, ArrowDownRight01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
-import PlatformLogo from "./platform-logo";
-import { Market, PLATFORM_META } from "./data";
+import PlatformLogo, { VENUE_DISPLAY_NAMES } from "./platform-logo";
+import type { MarketListItem } from "@/lib/api/types";
 
-export default function MarketRow({ market }: { market: Market }) {
-  const up = market.change >= 0;
-  const diff = market.cross ? Math.abs(market.price - market.cross.price) : null;
+function fmtVolume(n: number): string {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000)     return `$${(n / 1_000).toFixed(0)}K`;
+  return `$${n}`;
+}
+
+export default function MarketRow({ market }: { market: MarketListItem }) {
+  const yesPrice = market.yesPrice;
+  const change   = market.change24h;
+  const up       = change !== null && change >= 0;
+  const navId    = market.matchGroupId ?? market.id;
 
   return (
     <div
@@ -17,57 +24,58 @@ export default function MarketRow({ market }: { market: Market }) {
       onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)")}
       onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
     >
-      {/* Image + platform + title */}
+      {/* Venue + title */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
-        <div className="relative shrink-0 overflow-hidden rounded-md" style={{ width: 32, height: 32 }}>
-          <Image src={market.image} alt={market.title} fill className="object-cover" sizes="32px" />
-        </div>
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-1.5 mb-0.5">
-            <PlatformLogo platform={market.platform} size={12} />
+            <PlatformLogo platform={market.venueId} size={12} />
             <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>
-              {PLATFORM_META[market.platform].label}
+              {VENUE_DISPLAY_NAMES[market.venueId] ?? market.venueId}
+            </span>
+            <span style={{ color: "rgba(255,255,255,0.12)" }}>·</span>
+            <span className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.2)" }}>
+              {market.category}
             </span>
           </div>
-          <span className="text-xs text-white/80 truncate font-medium">{market.title}</span>
+          <span className="text-[12px] text-white/80 truncate font-medium">{market.title}</span>
         </div>
       </div>
 
       {/* Price */}
-      <span className="text-sm font-bold text-white w-14 text-right shrink-0">{market.price}¢</span>
+      <span className="text-sm font-bold text-white w-14 text-right shrink-0">
+        {yesPrice !== null ? `${yesPrice}¢` : "—"}
+      </span>
 
       {/* Change */}
       <div className="flex items-center gap-1 w-16 justify-end shrink-0">
-        <HugeiconsIcon icon={up ? ArrowUpRight01Icon : ArrowDownRight01Icon} size={11} strokeWidth={2} color={up ? "#34d399" : "#f87171"} />
-        <span className="text-[11px] font-semibold" style={{ color: up ? "#34d399" : "#f87171" }}>
-          {up ? "+" : ""}{market.change}%
-        </span>
-      </div>
-
-      {/* Cross-platform delta */}
-      <div className="w-32 flex items-center justify-end gap-1.5 shrink-0">
-        {market.cross && diff !== null ? (
+        {change !== null ? (
           <>
-            <PlatformLogo platform={market.cross.platform} size={13} />
-            <span className="text-[10px] text-white/30">{market.cross.price}¢</span>
-            <span className="text-[9px] px-1.5 py-0.5 font-bold" style={{ background: "rgba(123,110,244,0.15)", color: "#7B6EF4" }}>
-              Δ {diff}¢
+            <HugeiconsIcon
+              icon={up ? ArrowUpRight01Icon : ArrowDownRight01Icon}
+              size={11}
+              strokeWidth={2}
+              color={up ? "#34d399" : "#f87171"}
+            />
+            <span className="text-[11px] font-semibold" style={{ color: up ? "#34d399" : "#f87171" }}>
+              {up ? "+" : ""}{change}%
             </span>
           </>
         ) : (
-          <span className="text-[10px] text-white/15">—</span>
+          <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>—</span>
         )}
       </div>
 
       {/* Volume */}
-      <span className="text-[11px] text-white/25 w-16 text-right shrink-0">{market.volume}</span>
+      <span className="text-[11px] text-white/25 w-16 text-right shrink-0">
+        {fmtVolume(market.volume24h)}
+      </span>
 
       {/* Actions */}
       <div className="flex gap-1.5 shrink-0">
-        <Link href={`/markets/${market.id}`}>
+        <Link href={`/markets/${navId}`}>
           <Button variant="primary" size="sm" shape="slant">Trade</Button>
         </Link>
-        <Link href={`/markets/${market.id}`}>
+        <Link href={`/markets/${navId}`}>
           <Button variant="ghost" size="sm" shape="slant">View</Button>
         </Link>
       </div>
